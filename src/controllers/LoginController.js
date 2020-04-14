@@ -1,27 +1,11 @@
-const connection = require('../database/connection');
+const { query_login } = require('../infrastructure/repository/loginRepository');
+const md5 = require('md5');
 
 module.exports = {
   async login(request, response, next) {
     const { login, password } = request.body;
-
-    const user = await connection('users')
-      .where({
-        login,
-        password,
-      })
-      .join('companies', 'users.company_id', '=', 'companies.id')
-      .select(
-        'users.name as user_name',
-        'users.email',
-        'users.phone',
-        'companies.name as company_name',
-        'companies.cnpj as company_cnpj',
-        'companies.city as company_city',
-        'companies.state as company_state',
-        'companies.country as company_country',
-        'users.id'
-      )
-      .first();
+    const hash = md5(password);
+    const user = await query_login(login, hash);
     if (!user) {
       return response
         .status(400)
